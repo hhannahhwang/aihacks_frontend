@@ -16,11 +16,17 @@ const NCCountyMap: React.FC<NCCountyMapProps> = ({
 }) => {
   const [svgContent, setSvgContent] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
-  const [countyMapping, setCountyMapping] = useState<Map<string, string>>(new Map());
-  const [reverseMapping, setReverseMapping] = useState<Map<string, string>>(new Map());
+  const [countyMapping, setCountyMapping] = useState<Map<string, string>>(
+    new Map(),
+  );
+  const [reverseMapping, setReverseMapping] = useState<Map<string, string>>(
+    new Map(),
+  );
   const svgRef = useRef<HTMLDivElement>(null);
 
-  const createCountyMapping = (paths: NodeListOf<Element>): {
+  const createCountyMapping = (
+    paths: NodeListOf<Element>,
+  ): {
     mapping: Map<string, string>;
     reverse: Map<string, string>;
   } => {
@@ -81,18 +87,17 @@ const NCCountyMap: React.FC<NCCountyMapProps> = ({
 
   // Handle click on county path
   const handleSvgClick = (e: Event) => {
-  const target = e.target;
-  if (target instanceof SVGPathElement) {
-    const pathId = target.id;
-    const countyName = countyMapping.get(pathId);
-    if (!countyName) return;
+    const target = e.target;
+    if (target instanceof SVGPathElement) {
+      const pathId = target.id;
+      const countyName = countyMapping.get(pathId);
+      if (!countyName) return;
 
-    const newSelection = selectedCounty === countyName ? null : countyName;
-    onCountySelect?.(newSelection);
-    e.stopPropagation(); // prevent white space deselect
-  }
-};
-
+      const newSelection = selectedCounty === countyName ? null : countyName;
+      onCountySelect?.(newSelection);
+      e.stopPropagation(); // prevent white space deselect
+    }
+  };
 
   // Handle white space click
   const handleWhiteSpaceClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -114,36 +119,36 @@ const NCCountyMap: React.FC<NCCountyMapProps> = ({
     const container = svgRef.current;
 
     const setupSvg = () => {
-  const paths = container.querySelectorAll("path");
+      const paths = container.querySelectorAll("path");
 
-  paths.forEach((path: Element) => {
-    const pathEl = path as SVGPathElement;
-    const pathId = path.id;
+      paths.forEach((path: Element) => {
+        const pathEl = path as SVGPathElement;
+        const pathId = path.id;
 
-    if (countyMapping.has(pathId)) {
-      pathEl.style.cursor = "pointer";
-      pathEl.style.transition = "fill 0.2s ease";
-      pathEl.style.stroke = "#374151";
-      pathEl.style.strokeWidth = "1";
-      pathEl.style.fill = "#e5e7eb";
-      pathEl.setAttribute("title", countyMapping.get(pathId) || "");
+        if (countyMapping.has(pathId)) {
+          pathEl.style.cursor = "pointer";
+          pathEl.style.transition = "fill 0.2s ease";
+          pathEl.style.stroke = "#374151";
+          pathEl.style.strokeWidth = "1";
+          pathEl.style.fill = "#e5e7eb";
+          pathEl.setAttribute("title", countyMapping.get(pathId) || "");
 
-      // Remove previous listener if any
-      pathEl.onclick = null;
+          // Remove previous listener if any
+          pathEl.onclick = null;
 
-      // ✅ Attach click handler here
-      pathEl.onclick = (e: MouseEvent) => {
-        e.stopPropagation(); // prevent bubbling to background
-        const countyName = countyMapping.get(pathEl.id);
-        if (!countyName) return;
+          // Attach click handler here
+          pathEl.onclick = (e: MouseEvent) => {
+            e.stopPropagation(); // prevent bubbling to background
+            const countyName = countyMapping.get(pathEl.id);
+            if (!countyName) return;
 
-        const newSelection = selectedCounty === countyName ? null : countyName;
-        onCountySelect?.(newSelection);
-      };
-    }
-  });
-};
-
+            const newSelection =
+              selectedCounty === countyName ? null : countyName;
+            onCountySelect?.(newSelection);
+          };
+        }
+      });
+    };
 
     const timeoutId = setTimeout(setupSvg, 100);
     return () => {
@@ -204,7 +209,7 @@ const NCCountyMap: React.FC<NCCountyMapProps> = ({
       </h2>
 
       <div
-        className="mb-6 rounded-r-lg border-l-4 border-blue-500 bg-blue-100 p-4 cursor-pointer"
+        className="mb-6 cursor-pointer rounded-r-lg border-l-4 border-blue-500 bg-blue-100 p-4"
         onClick={handleWhiteSpaceClick}
       >
         <p className="text-lg font-semibold text-blue-800">
@@ -213,13 +218,13 @@ const NCCountyMap: React.FC<NCCountyMapProps> = ({
       </div>
 
       <div
-        className="rounded-xl h-[70vh] border-2 border-gray-200 bg-white p-6 shadow-lg overflow-hidden"
+        className="h-[70vh] overflow-hidden rounded-xl border-2 border-gray-200 bg-white p-6 shadow-lg"
         onClick={handleWhiteSpaceClick}
       >
         <div
           ref={svgRef}
           dangerouslySetInnerHTML={{ __html: svgContent }}
-          className="select-none w-full h-auto max-w-full flex items-center justify-center"
+          className="flex h-auto w-full max-w-full items-center justify-center select-none"
           style={{
             maxHeight: "100%",
             aspectRatio: "auto",
