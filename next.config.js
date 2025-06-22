@@ -7,8 +7,8 @@ const nextConfig = {
     path: "",
     unoptimized: true,
   },
-  basePath: "",
-  assetPrefix: "",
+  basePath: "/aihacks_frontend",
+  assetPrefix: "/aihacks_frontend",
 };
 
 module.exports = nextConfig;
