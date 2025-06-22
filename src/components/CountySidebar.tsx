@@ -66,7 +66,7 @@ const CountySidebar: React.FC<CountySidebarProps> = ({
   };
 
   return (
-    <div className="flex h-screen w-64 flex-col border-gray-200 bg-white shadow-lg">
+    <div className="flex h-screen w-64 flex-col border-gray-200 bg-white">
       <div className="border-b border-gray-200 p-4">
         <div className="text-lg font-semibold text-gray-800">voter.flw</div>
       </div>
