@@ -230,20 +230,20 @@ const CountyMap: React.FC<NCCountyMapProps> = ({
       </div>
 
       <div className="mb-4 rounded-lg bg-gray-50 p-4">
-        <div className="flex items-center justify-between text-sm text-gray-600">
+        <div className="flex items-center text-sm text-gray-600">
           <span className="flex items-center">
             <div
-              className="mr-2 h-4 w-4 rounded"
+              className="mr-2 h-4 w-4 rounded px-4"
               style={{ backgroundColor: "hsl(220, 80%, 20%)" }}
             ></div>
-            Low Risk (0.0)
+            High Risk (0.0)
           </span>
           <span className="flex items-center">
             <div
               className="mr-2 h-4 w-4 rounded"
               style={{ backgroundColor: "hsl(220, 80%, 80%)" }}
             ></div>
-            High Risk (1.0)
+            Low Risk (1.0)
           </span>
         </div>
       </div>
