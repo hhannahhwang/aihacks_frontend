@@ -18,6 +18,7 @@ const CountyApp: React.FC = () => {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
+      console.log("county", county);
       <CountySidebar
         selectedCounty={selectedCounty}
         onCountySelect={handleCountySelect}
