@@ -98,7 +98,7 @@ export const riskScores: { [key: string]: number } = {
   ORANGE: 0.106,
   DURHAM: 0.0,
   BUNCOMBE: 0.7,
-  "NEW HANOVER": 0.51,
+  NEWHANOVER: 0.51,
 };
 
 export default riskScores;
