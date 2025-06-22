@@ -63,7 +63,7 @@ export const counties: string[] = [
   "Montgomery",
   "Moore",
   "Nash",
-  "New Hanover",
+  "NewHanover",
   "Northampton",
   "Onslow",
   "Orange",
