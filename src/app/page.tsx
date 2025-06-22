@@ -12,11 +12,10 @@ const CountyApp: React.FC = () => {
     setSelectedCounty(county);
   };
 
-  const handleCountyHover = (county: string | null) => {
+  const handleCountyHover = (hoveredCounty: string | null) => {
     setHoveredCounty(hoveredCounty);
   };
 
-  console.log("Hovered County:", hoveredCounty);
 
   return (
     <div className="flex min-h-screen bg-gray-50">
