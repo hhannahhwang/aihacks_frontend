@@ -16,6 +16,8 @@ const CountyApp: React.FC = () => {
     setHoveredCounty(hoveredCounty);
   };
 
+  console.log("Hovered County:", hoveredCounty);
+  
   return (
     <div className="flex min-h-screen bg-gray-50">
       <CountySidebar
