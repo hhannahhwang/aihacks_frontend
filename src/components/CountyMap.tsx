@@ -2,47 +2,98 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { counties } from "../data/counties";
+import { riskScores } from "../data/riskScores";
 
 interface NCCountyMapProps {
   selectedCounty?: string | null;
+  hoveredCounty?: string | null;
   onCountySelect?: (county: string | null) => void;
   onCountyHover?: (county: string | null) => void;
 }
 
 const CountyMap: React.FC<NCCountyMapProps> = ({
   selectedCounty,
+  hoveredCounty,
   onCountySelect,
-  onCountyHover,
 }) => {
   const [svgContent, setSvgContent] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
   const [countyMapping, setCountyMapping] = useState<Map<string, string>>(
     new Map(),
   );
-  const [reverseMapping, setReverseMapping] = useState<Map<string, string>>(
-    new Map(),
+  const [analysisCache, setAnalysisCache] = useState<Record<string, string>>(
+    {},
   );
 
-  console.log("reverseMapping:", reverseMapping);
-
   const svgRef = useRef<HTMLDivElement>(null);
-  const selectedCountyRef = useRef<string | null>(null);
 
-  useEffect(() => {
-    selectedCountyRef.current = selectedCounty ?? null;
-  }, [selectedCounty]);
+  const getCountyColor = (
+    countyName: string | undefined,
+    isHovered: boolean,
+  ): string => {
+    if (!countyName) return "#e5e7eb";
+    const riskScore = riskScores[countyName.toUpperCase()];
+    if (riskScore === undefined) return "#e5e7eb";
+
+    if (isHovered) {
+      return "#bfdbfe";
+    }
+
+    const lightness = 20 + riskScore * 60;
+    return `hsl(220, 80%, ${lightness}%)`;
+  };
 
   const createCountyMapping = (paths: NodeListOf<Element>) => {
     const mapping = new Map<string, string>();
-    const reverse = new Map<string, string>();
     paths.forEach((path, index) => {
       const pathId = path.id || `county-${index}`;
       const countyName = counties[index];
       mapping.set(pathId, countyName);
-      reverse.set(countyName, pathId);
     });
-    return { mapping, reverse };
+    return mapping;
   };
+
+  const fetchAnalysis = async (countyName: string) => {
+    const upper = countyName.toUpperCase();
+    if (analysisCache[upper]) return;
+
+    try {
+      const res = await fetch(`/data/${upper}_analysis.txt`);
+      const text = await res.text();
+      setAnalysisCache((prev) => ({ ...prev, [upper]: text }));
+    } catch (err) {
+      console.error(`Error loading analysis for ${upper}:`, err);
+      setAnalysisCache((prev) => ({
+        ...prev,
+        [upper]: "No analysis available.",
+      }));
+    }
+  };
+
+  useEffect(() => {
+    const preloadAllAnalysis = async () => {
+      for (const county of counties) {
+        let upper = county.toUpperCase();
+        upper = upper.toUpperCase().replace(/\s+/g, "");
+
+        if (analysisCache[upper]) continue;
+        try {
+          const res = await fetch(`/data/${upper}_analysis.txt`);
+          if (!res.ok) throw new Error("Not found");
+          const text = await res.text();
+          setAnalysisCache((prev) => ({ ...prev, [upper]: text }));
+        } catch (err) {
+          setAnalysisCache((prev) => ({
+            ...prev,
+            [upper]: "No analysis available.",
+          }));
+          console.log(err);
+        }
+      }
+    };
+
+    preloadAllAnalysis();
+  }, []);
 
   useEffect(() => {
     const loadSvg = async () => {
@@ -65,9 +116,8 @@ const CountyMap: React.FC<NCCountyMapProps> = ({
           if (!path.id) path.id = `county-${index}`;
         });
 
-        const { mapping, reverse } = createCountyMapping(paths);
+        const mapping = createCountyMapping(paths);
         setCountyMapping(mapping);
-        setReverseMapping(reverse);
 
         const serializer = new XMLSerializer();
         setSvgContent(serializer.serializeToString(svgDoc));
@@ -89,43 +139,6 @@ const CountyMap: React.FC<NCCountyMapProps> = ({
   }, []);
 
   useEffect(() => {
-    if (!svgContent || loading || !svgRef.current) return;
-
-    const container = svgRef.current;
-
-    const setupSvg = () => {
-      const paths = container.querySelectorAll("path");
-
-      paths.forEach((path: Element) => {
-        const pathEl = path as SVGPathElement;
-        const pathId = path.id;
-
-        if (countyMapping.has(pathId)) {
-          pathEl.style.cursor = "pointer";
-          pathEl.style.transition = "fill 0.2s ease";
-          pathEl.style.stroke = "#374151";
-          pathEl.style.strokeWidth = "1";
-          pathEl.style.fill = "#e5e7eb";
-          pathEl.setAttribute("title", countyMapping.get(pathId) || "");
-
-          pathEl.onclick = (e: MouseEvent) => {
-            e.stopPropagation();
-            const countyName = countyMapping.get(pathEl.id);
-            if (!countyName) return;
-
-            const newSelection =
-              selectedCountyRef.current === countyName ? null : countyName;
-            onCountySelect?.(newSelection);
-          };
-        }
-      });
-    };
-
-    const timeoutId = setTimeout(setupSvg, 100);
-    return () => clearTimeout(timeoutId);
-  }, [svgContent, loading, countyMapping, onCountySelect]);
-
-  useEffect(() => {
     if (!svgRef.current || loading) return;
 
     const paths = svgRef.current.querySelectorAll("path");
@@ -136,22 +149,32 @@ const CountyMap: React.FC<NCCountyMapProps> = ({
 
       if (countyMapping.has(pathId)) {
         const countyName = countyMapping.get(pathId);
-        const isSelected = selectedCounty === countyName;
 
-        pathEl.style.fill = isSelected ? "#3b82f6" : "#e5e7eb";
+        const color = getCountyColor(countyName, false);
+        pathEl.style.fill = color;
+        pathEl.style.cursor = "pointer";
 
         pathEl.onmouseenter = () => {
-          if (!isSelected) pathEl.style.fill = "#bfdbfe";
-          onCountyHover?.(countyName ?? null);
+          if (countyName) {
+            fetchAnalysis(countyName);
+          }
+          const hoverColor = getCountyColor(countyName, true);
+          pathEl.style.fill = hoverColor;
+          onCountySelect?.(countyName ?? null);
         };
 
         pathEl.onmouseleave = () => {
-          pathEl.style.fill = isSelected ? "#3b82f6" : "#e5e7eb";
-          onCountyHover?.(null);
+          const defaultColor = getCountyColor(countyName, false);
+          pathEl.style.fill = defaultColor;
+        };
+
+        pathEl.onclick = (e) => {
+          e.stopPropagation();
+          onCountySelect?.(countyName ?? null);
         };
       }
     });
-  }, [selectedCounty, loading, countyMapping, onCountyHover]);
+  }, [loading, countyMapping, svgContent, analysisCache, onCountySelect]);
 
   const handleWhiteSpaceClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const svgElem = svgRef.current?.querySelector("svg");
@@ -165,6 +188,20 @@ const CountyMap: React.FC<NCCountyMapProps> = ({
       onCountySelect?.(null);
     }
   };
+
+  const getRiskScore = (
+    countyName: string | null | undefined,
+  ): number | null => {
+    if (!countyName) return null;
+    const score = riskScores[countyName.toUpperCase()];
+    return score !== undefined ? score : null;
+  };
+
+  const currentCounty = (hoveredCounty ?? null) || selectedCounty;
+  const currentRiskScore = getRiskScore(currentCounty);
+  const currentAnalysis = currentCounty
+    ? analysisCache[currentCounty.toUpperCase()]
+    : null;
 
   if (loading) {
     return (
@@ -186,29 +223,65 @@ const CountyMap: React.FC<NCCountyMapProps> = ({
       className="mx-auto w-full max-w-6xl p-4"
       onClick={handleWhiteSpaceClick}
     >
-      <h2 className="mb-6 text-center text-3xl font-bold text-gray-800">
-        North Carolina Counties
-      </h2>
-
-      <div
-        className="mb-6 cursor-pointer rounded-r-lg border-l-4 border-blue-500 bg-blue-100 p-4"
-        onClick={() => {
-          const newSelection = selectedCounty ? null : null;
-          onCountySelect?.(newSelection);
-        }}
-      >
-        <p className="text-lg font-semibold text-blue-800">
-          Selected County: {selectedCounty ?? "N/A"}
-        </p>
+      <div className="mb-6 text-center text-3xl font-bold text-gray-800">
+        North Carolina Counties Risk Assessment
       </div>
 
-      <div className="h-[70vh] overflow-hidden rounded-xl border-2 border-gray-200 bg-white p-6 shadow-lg">
+      <div className="mb-4 rounded-lg bg-gray-50 p-4">
+        <div className="flex items-center justify-between text-sm text-gray-600">
+          <span className="flex items-center">
+            <div
+              className="mr-2 h-4 w-4 rounded"
+              style={{ backgroundColor: "hsl(220, 80%, 20%)" }}
+            ></div>
+            Low Risk (0.0)
+          </span>
+          <span className="flex items-center">
+            <div
+              className="mr-2 h-4 w-4 rounded"
+              style={{ backgroundColor: "hsl(220, 80%, 80%)" }}
+            ></div>
+            High Risk (1.0)
+          </span>
+        </div>
+      </div>
+      <div className="flex">
         <div
-          ref={svgRef}
-          dangerouslySetInnerHTML={{ __html: svgContent }}
-          className="flex h-auto w-full max-w-full items-center justify-center select-none"
-          style={{ maxHeight: "100%", aspectRatio: "auto", overflow: "hidden" }}
-        />
+          className="mr-2 mb-6 ml-2 h-[75vh] w-1/3 cursor-pointer rounded-r-lg border-l-4 border-blue-500 bg-blue-100 p-4"
+          onClick={() => {
+            onCountySelect?.(null);
+          }}
+        >
+          <p className="text-lg font-semibold text-blue-800">
+            Current County: {currentCounty || "None"}
+          </p>
+          {currentCounty && (
+            <>
+              <p className="text-md font-medium text-blue-700">
+                Risk Score:{" "}
+                {currentRiskScore !== null
+                  ? currentRiskScore.toFixed(3)
+                  : "0.000"}
+              </p>
+              <p className="mt-2 text-sm whitespace-pre-wrap text-gray-600">
+                <strong>Analysis:</strong> {currentAnalysis || "Loading..."}
+              </p>
+            </>
+          )}
+        </div>
+
+        <div className="ml-2 h-[75vh] w-2/3 overflow-hidden rounded-xl border-2 border-gray-200 bg-white p-6 shadow-lg">
+          <div
+            ref={svgRef}
+            dangerouslySetInnerHTML={{ __html: svgContent }}
+            className="flex h-auto w-full max-w-full items-center justify-center select-none"
+            style={{
+              maxHeight: "100%",
+              aspectRatio: "auto",
+              overflow: "hidden",
+            }}
+          />
+        </div>
       </div>
     </div>
   );
