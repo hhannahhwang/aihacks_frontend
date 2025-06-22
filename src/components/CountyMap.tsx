@@ -9,7 +9,7 @@ interface NCCountyMapProps {
   onCountyHover?: (county: string | null) => void;
 }
 
-const NCCountyMap: React.FC<NCCountyMapProps> = ({
+const CountyMap: React.FC<NCCountyMapProps> = ({
   selectedCounty,
   onCountySelect,
   onCountyHover,
@@ -23,13 +23,13 @@ const NCCountyMap: React.FC<NCCountyMapProps> = ({
     new Map(),
   );
   const svgRef = useRef<HTMLDivElement>(null);
+  const selectedCountyRef = useRef<string | null>(null);
 
-  const createCountyMapping = (
-    paths: NodeListOf<Element>,
-  ): {
-    mapping: Map<string, string>;
-    reverse: Map<string, string>;
-  } => {
+  useEffect(() => {
+    selectedCountyRef.current = selectedCounty ?? null;
+  }, [selectedCounty]);
+
+  const createCountyMapping = (paths: NodeListOf<Element>) => {
     const mapping = new Map<string, string>();
     const reverse = new Map<string, string>();
     paths.forEach((path, index) => {
@@ -68,7 +68,6 @@ const NCCountyMap: React.FC<NCCountyMapProps> = ({
 
         const serializer = new XMLSerializer();
         setSvgContent(serializer.serializeToString(svgDoc));
-        setLoading(false);
       } catch (err) {
         console.error(err);
         setSvgContent(`
@@ -78,6 +77,7 @@ const NCCountyMap: React.FC<NCCountyMapProps> = ({
             </text>
           </svg>
         `);
+      } finally {
         setLoading(false);
       }
     };
@@ -85,37 +85,9 @@ const NCCountyMap: React.FC<NCCountyMapProps> = ({
     loadSvg();
   }, []);
 
-  // Handle click on county path
-  const handleSvgClick = (e: Event) => {
-    const target = e.target;
-    if (target instanceof SVGPathElement) {
-      const pathId = target.id;
-      const countyName = countyMapping.get(pathId);
-      if (!countyName) return;
-
-      const newSelection = selectedCounty === countyName ? null : countyName;
-      onCountySelect?.(newSelection);
-      e.stopPropagation(); // prevent white space deselect
-    }
-  };
-
-  // Handle white space click
-  const handleWhiteSpaceClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    const svgElem = svgRef.current?.querySelector("svg");
-    if (!svgElem || !e.target) return;
-
-    // If user clicked directly on the background div or on the svg (but not path)
-    const isBackground =
-      e.target === e.currentTarget || // clicked on outer container
-      (e.target instanceof SVGElement && e.target.tagName !== "path");
-
-    if (isBackground) {
-      onCountySelect?.(null);
-    }
-  };
-
   useEffect(() => {
     if (!svgContent || loading || !svgRef.current) return;
+
     const container = svgRef.current;
 
     const setupSvg = () => {
@@ -133,17 +105,13 @@ const NCCountyMap: React.FC<NCCountyMapProps> = ({
           pathEl.style.fill = "#e5e7eb";
           pathEl.setAttribute("title", countyMapping.get(pathId) || "");
 
-          // Remove previous listener if any
-          pathEl.onclick = null;
-
-          // Attach click handler here
           pathEl.onclick = (e: MouseEvent) => {
-            e.stopPropagation(); // prevent bubbling to background
+            e.stopPropagation();
             const countyName = countyMapping.get(pathEl.id);
             if (!countyName) return;
 
             const newSelection =
-              selectedCounty === countyName ? null : countyName;
+              selectedCountyRef.current === countyName ? null : countyName;
             onCountySelect?.(newSelection);
           };
         }
@@ -151,14 +119,12 @@ const NCCountyMap: React.FC<NCCountyMapProps> = ({
     };
 
     const timeoutId = setTimeout(setupSvg, 100);
-    return () => {
-      clearTimeout(timeoutId);
-      container.removeEventListener("click", handleSvgClick);
-    };
-  }, [svgContent, loading, countyMapping]);
+    return () => clearTimeout(timeoutId);
+  }, [svgContent, loading, countyMapping, onCountySelect]);
 
   useEffect(() => {
     if (!svgRef.current || loading) return;
+
     const paths = svgRef.current.querySelectorAll("path");
 
     paths.forEach((path) => {
@@ -183,6 +149,19 @@ const NCCountyMap: React.FC<NCCountyMapProps> = ({
       }
     });
   }, [selectedCounty, loading, countyMapping, onCountyHover]);
+
+  const handleWhiteSpaceClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const svgElem = svgRef.current?.querySelector("svg");
+    if (!svgElem || !e.target) return;
+
+    const isBackground =
+      e.target === e.currentTarget ||
+      (e.target instanceof SVGElement && e.target.tagName !== "path");
+
+    if (isBackground) {
+      onCountySelect?.(null);
+    }
+  };
 
   if (loading) {
     return (
@@ -210,30 +189,26 @@ const NCCountyMap: React.FC<NCCountyMapProps> = ({
 
       <div
         className="mb-6 cursor-pointer rounded-r-lg border-l-4 border-blue-500 bg-blue-100 p-4"
-        onClick={handleWhiteSpaceClick}
+        onClick={() => {
+          const newSelection = selectedCounty ? null : null;
+          onCountySelect?.(newSelection);
+        }}
       >
         <p className="text-lg font-semibold text-blue-800">
           Selected County: {selectedCounty ?? "N/A"}
         </p>
       </div>
 
-      <div
-        className="h-[70vh] overflow-hidden rounded-xl border-2 border-gray-200 bg-white p-6 shadow-lg"
-        onClick={handleWhiteSpaceClick}
-      >
+      <div className="h-[70vh] overflow-hidden rounded-xl border-2 border-gray-200 bg-white p-6 shadow-lg">
         <div
           ref={svgRef}
           dangerouslySetInnerHTML={{ __html: svgContent }}
           className="flex h-auto w-full max-w-full items-center justify-center select-none"
-          style={{
-            maxHeight: "100%",
-            aspectRatio: "auto",
-            overflow: "hidden",
-          }}
+          style={{ maxHeight: "100%", aspectRatio: "auto", overflow: "hidden" }}
         />
       </div>
     </div>
   );
 };
 
-export default NCCountyMap;
+export default CountyMap;

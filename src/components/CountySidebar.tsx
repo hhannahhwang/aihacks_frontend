@@ -23,9 +23,8 @@ const CountySidebar: React.FC<CountySidebarProps> = ({
   );
 
   const handleCountyClick = (county: string) => {
-    // Toggle selection - if same county clicked, deselect it
-    const newSelection = selectedCounty === county ? null : county;
-    onCountySelect?.(newSelection);
+    const isAlreadySelected = selectedCounty === county;
+    onCountySelect?.(isAlreadySelected ? null : county);
     setIsOpen(false);
     setSearchTerm("");
   };
