@@ -23,6 +23,7 @@ const CountySidebar: React.FC<CountySidebarProps> = ({
   const [analysisCache, setAnalysisCache] = useState<Record<string, string>>(
     {},
   );
+  console.log(onCountyHover);
 
   const currentCounty = hoveredCounty || selectedCounty;
   let currentUpper = currentCounty?.toUpperCase();

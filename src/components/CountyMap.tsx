@@ -87,6 +87,7 @@ const CountyMap: React.FC<NCCountyMapProps> = ({
             ...prev,
             [upper]: "No analysis available.",
           }));
+          console.log(err);
         }
       }
     };
