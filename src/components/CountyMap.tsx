@@ -78,7 +78,9 @@ const CountyMap: React.FC<NCCountyMapProps> = ({
 
         if (analysisCache[upper]) continue;
         try {
-          const res = await fetch(`/data/${upper}_analysis.txt`);
+          const res = await fetch(
+            `/aihacks_frontend/data/${upper}_analysis.txt`,
+          );
           if (!res.ok) throw new Error("Not found");
           const text = await res.text();
           setAnalysisCache((prev) => ({ ...prev, [upper]: text }));
@@ -98,7 +100,7 @@ const CountyMap: React.FC<NCCountyMapProps> = ({
   useEffect(() => {
     const loadSvg = async () => {
       try {
-        const res = await fetch("/NCmap.svg");
+        const res = await fetch("/aihacks_frontend/NCmap.svg");
         const svgText = await res.text();
         const parser = new DOMParser();
         const svgDoc = parser.parseFromString(svgText, "image/svg+xml");
