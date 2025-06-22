@@ -2,28 +2,40 @@
 
 import React, { useState } from "react";
 import { Search } from "lucide-react";
-import { northCarolinaCounties } from "../data/counties";
+import { counties } from "../data/counties";
 
 interface CountySidebarProps {
-  onCountySelect?: (county: string) => void;
-  selectedCounty?: string;
+  onCountySelect?: (county: string | null) => void;
+  onCountyHover?: (county: string | null) => void;
+  selectedCounty?: string | null;
 }
 
 const CountySidebar: React.FC<CountySidebarProps> = ({
   onCountySelect,
+  onCountyHover,
   selectedCounty,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const filteredCounties = northCarolinaCounties.filter((county) =>
+  const filteredCounties = counties.filter((county) =>
     county.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const handleCountyClick = (county: string) => {
-    onCountySelect?.(county);
+    // Toggle selection - if same county clicked, deselect it
+    const newSelection = selectedCounty === county ? null : county;
+    onCountySelect?.(newSelection);
     setIsOpen(false);
     setSearchTerm("");
+  };
+
+  const handleCountyHover = (county: string) => {
+    onCountyHover?.(county);
+  };
+
+  const handleCountyLeave = () => {
+    onCountyHover?.(null);
   };
 
   return (
@@ -60,6 +72,8 @@ const CountySidebar: React.FC<CountySidebarProps> = ({
                     <button
                       key={county}
                       onClick={() => handleCountyClick(county)}
+                      onMouseEnter={() => handleCountyHover(county)}
+                      onMouseLeave={handleCountyLeave}
                       className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100"
                     >
                       {county}
@@ -72,10 +86,12 @@ const CountySidebar: React.FC<CountySidebarProps> = ({
 
           {/* Visible County List */}
           <div className="custom-scrollbar flex-1 space-y-1 overflow-y-auto pr-2">
-            {northCarolinaCounties.map((county: string) => (
+            {counties.map((county: string) => (
               <button
                 key={county}
                 onClick={() => handleCountyClick(county)}
+                onMouseEnter={() => handleCountyHover(county)}
+                onMouseLeave={handleCountyLeave}
                 className={`w-full rounded-lg px-3 py-2 text-left text-sm transition-colors ${
                   selectedCounty === county
                     ? "bg-blue-100 text-blue-800"

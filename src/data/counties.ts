@@ -1,4 +1,4 @@
-export const northCarolinaCounties: string[] = [
+export const counties: string[] = [
   "Alamance",
   "Alexander",
   "Alleghany",
@@ -101,4 +101,4 @@ export const northCarolinaCounties: string[] = [
   "Yancey",
 ];
 
-export default northCarolinaCounties;
+export default counties;
