@@ -22,6 +22,9 @@ const CountyMap: React.FC<NCCountyMapProps> = ({
   const [reverseMapping, setReverseMapping] = useState<Map<string, string>>(
     new Map(),
   );
+
+  console.log("reverseMapping:", reverseMapping);
+
   const svgRef = useRef<HTMLDivElement>(null);
   const selectedCountyRef = useRef<string | null>(null);
 

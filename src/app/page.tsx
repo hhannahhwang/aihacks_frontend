@@ -13,7 +13,7 @@ const CountyApp: React.FC = () => {
   };
 
   const handleCountyHover = (county: string | null) => {
-    setHoveredCounty(county);
+    setHoveredCounty(hoveredCounty);
   };
 
   return (
