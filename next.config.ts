@@ -12,4 +12,4 @@ const nextConfig: NextConfig = {
   assetPrefix: "",
 };
 
-module.exports = nextConfig;
+export default nextConfig;

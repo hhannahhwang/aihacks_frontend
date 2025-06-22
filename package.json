@@ -9,7 +9,8 @@
     "format": "npx prettier --write .",
     "check": "npx prettier --check .",
     "eslint": "npx eslint -c eslint.config.mjs",
-    "prepare": "husky"
+    "prepare": "husky",
+    "export": "next export"
   },
   "dependencies": {
     "@tanstack/react-query": "5.69.0",
