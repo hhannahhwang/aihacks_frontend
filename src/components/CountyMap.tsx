@@ -58,7 +58,7 @@ const CountyMap: React.FC<NCCountyMapProps> = ({
     if (analysisCache[upper]) return;
 
     try {
-      const res = await fetch(`/data/${upper}_analysis.txt`);
+      const res = await fetch(`/aihacks_frontend/data/${upper}_analysis.txt`);
       const text = await res.text();
       setAnalysisCache((prev) => ({ ...prev, [upper]: text }));
     } catch (err) {

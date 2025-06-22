@@ -39,7 +39,9 @@ const CountySidebar: React.FC<CountySidebarProps> = ({
 
     const fetchAnalysis = async () => {
       try {
-        const res = await fetch(`/data/${currentUpper}_analysis.txt`);
+        const res = await fetch(
+          `/aihacks_frontend/data/${currentUpper}_analysis.txt`,
+        );
         console.log(currentUpper);
         const text = await res.text();
         console.log(text);
