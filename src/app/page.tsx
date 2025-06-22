@@ -18,10 +18,15 @@ const CountyApp: React.FC = () => {
 
   console.log("Hovered County:", hoveredCounty);
 
+  // Display the most recent interaction - hover takes priority when present
+  const displayedCounty = hoveredCounty || selectedCounty;
+
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex bg-gray-50">
       <CountySidebar
         selectedCounty={selectedCounty}
+        hoveredCounty={hoveredCounty}
+        displayedCounty={displayedCounty}
         onCountySelect={handleCountySelect}
         onCountyHover={handleCountyHover}
       />
