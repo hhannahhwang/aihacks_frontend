@@ -8,8 +8,8 @@ const nextConfig: NextConfig = {
     path: "",
     unoptimized: true,
   },
-  basePath: "",
-  assetPrefix: "",
+  basePath: "/voter-map",
+  assetPrefix: "/voter-map",
 };
 
 export default nextConfig;
